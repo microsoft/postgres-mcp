@@ -10,7 +10,7 @@ bulk‑load CSVs — from GitHub Copilot, Claude Code, Cursor, VS Code, or any
 MCP‑compatible client.
 
 - **npm:** https://www.npmjs.com/package/@microsoft/postgres-mcp
-- **Changelog:** [GitHub Releases](https://github.com/microsoft/postgres-mcp/releases)
+- **Changelog:** [CHANGELOG.md](./CHANGELOG.md)
 - **No install required** — run it straight from `npx`.
 - **Layered safety** — `pgsql_query` is read‑only; profiles can explicitly block
   write tools; path approval constrains local CSV reads.
