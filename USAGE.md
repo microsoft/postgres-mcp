@@ -335,3 +335,9 @@ credentials). Disable it with `run --no-telemetry`.
   `PGSQL_MCP_EXTRA_CA_CERTS` at the CA's PEM file, or add it to your OS trust
   store (non‑AAD connections trust the OS store automatically).
 - **See more logs** — set `PGSQL_MCP_LOG=debug` (logs go to stderr).
+- **The server exits immediately on Windows and prints nothing** — the
+  Microsoft Visual C++ Redistributable is missing. Install or repair the
+  [x64 redistributable](https://aka.ms/vs/17/release/vc_redist.x64.exe), then
+  retry. Newer launcher versions report the underlying Windows loader status
+  (for example `STATUS_DLL_NOT_FOUND`, `0xC0000135`) on stderr instead of
+  failing silently.
