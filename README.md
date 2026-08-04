@@ -127,6 +127,10 @@ Full details in the [usage guide](./USAGE.md#security--consent).
 - **Node.js 22+** (to run via `npx`).
 - Linux x64/arm64, macOS x64/arm64, or Windows x64. Windows ARM uses x64
   emulation.
+- **On Windows:** the [Microsoft Visual C++ Redistributable for Visual Studio
+  2015-2022 (x64)](https://aka.ms/vs/17/release/vc_redist.x64.exe). A fresh
+  Windows installation does not include it, and the server cannot start
+  without it.
 - A reachable **PostgreSQL** database (self‑hosted, Azure Database for PostgreSQL,
   or any wire‑compatible server).
 
