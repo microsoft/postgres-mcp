@@ -1,9 +1,9 @@
 # Postgres MCP Server
 
 [![Platforms: Claude | Copilot | Codex | Open Code](https://img.shields.io/badge/Platforms-Claude_|_Copilot_|_Codex_|_Open_Code-purple.svg)](#2-add-it-to-your-mcp-client)
-[![Postgres: local | docker | on-premises | azure | aws | gcp](https://img.shields.io/badge/Postgres-local_|_docker_|_on--premises_|_azure_|_aws_|_gcp-336791.svg)](#requirements)
-[![Authentication: password | Entra ID](https://img.shields.io/badge/Authentication-password_|_Entra_ID-green.svg)](./USAGE.md#authentication)
-[![Release status: Public Preview](https://img.shields.io/badge/Release_status-Public_Preview-orange.svg)](./CHANGELOG.md)
+[![Postgres: local | on-prem | azure | aws | gcp](https://img.shields.io/badge/Postgres-local_|_on--prem_|_azure_|_aws_|_gcp-336791.svg)](#requirements)
+[![Auth: password | Entra ID](https://img.shields.io/badge/Auth-password_|_Entra_ID-green.svg)](./USAGE.md#authentication)
+[![Release status: Preview](https://img.shields.io/badge/Release_status-Preview-blue.svg)](./CHANGELOG.md)
 
 **Connect your coding agent to PostgreSQL.** `postgres-mcp` lets you generate
 queries and run analytics, design database schemas, diagnose performance of the
@@ -13,8 +13,6 @@ Cursor, VS Code, and more.
 
 - **npm:** https://www.npmjs.com/package/@microsoft/postgres-mcp
 - **No install required** — run it straight from `npx`.
-
----
 
 ## Quick start
 
