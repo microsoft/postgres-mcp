@@ -1,9 +1,9 @@
 # Postgres MCP Server
 
-[![Release status: Public Preview](https://img.shields.io/badge/Release_status-Public_Preview-orange.svg)](./CHANGELOG.md)
 [![Platforms: Claude | Copilot | Codex | Open Code](https://img.shields.io/badge/Platforms-Claude_|_Copilot_|_Codex_|_Open_Code-purple.svg)](#2-add-it-to-your-mcp-client)
 [![Postgres: local | docker | on-premises | azure | aws | gcp](https://img.shields.io/badge/Postgres-local_|_docker_|_on--premises_|_azure_|_aws_|_gcp-336791.svg)](#requirements)
 [![Authentication: password | Entra ID](https://img.shields.io/badge/Authentication-password_|_Entra_ID-green.svg)](./USAGE.md#authentication)
+[![Release status: Public Preview](https://img.shields.io/badge/Release_status-Public_Preview-orange.svg)](./CHANGELOG.md)
 
 **Connect your coding agent to Postgres.** `postgres-mcp` lets you generate
 queries and run analytics, design database schemas, diagnose performance of the
