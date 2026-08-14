@@ -5,7 +5,7 @@
 [![Authentication: password | Entra ID](https://img.shields.io/badge/Authentication-password_|_Entra_ID-green.svg)](./USAGE.md#authentication)
 [![Release status: Public Preview](https://img.shields.io/badge/Release_status-Public_Preview-orange.svg)](./CHANGELOG.md)
 
-**Connect your coding agent to Postgres.** `postgres-mcp` lets you generate
+**Connect your coding agent to PostgreSQL.** `postgres-mcp` lets you generate
 queries and run analytics, design database schemas, diagnose performance of the
 server and queries, securely manage connections, and import data. It is
 compatible with any MCP client — GitHub Copilot, Claude Code, Codex, Open Code,
