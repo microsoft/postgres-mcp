@@ -44,7 +44,7 @@ npx -y @microsoft/postgres-mcp connection list
 
 The server speaks MCP over stdio. Point your client at
 `npx @microsoft/postgres-mcp run` — no credentials go in the client config; the
-assistant discovers and connects to your saved profile at runtime.
+coding agent discovers and connects to your saved profile at runtime.
 
 **GitHub Copilot CLI, Claude Code, Cursor & Claude Desktop** — clients that use the `mcpServers` format (`~/.copilot/mcp-config.json`, `mcp.json`, `.cursor/mcp.json`, `claude_desktop_config.json`, …):
 
@@ -99,7 +99,7 @@ args = ["-y", "@microsoft/postgres-mcp", "run"]
 > [Connecting without a profile](./USAGE.md#connecting-without-a-profile) in the
 > guide.
 
-### 3. Ask your assistant
+### 3. Ask your coding agent
 
 > "List the tables in my PostgreSQL database."
 > "Show me the 10 most recent orders from my PostgreSQL database."
