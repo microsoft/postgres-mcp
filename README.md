@@ -2,7 +2,6 @@
 
 [![Platforms: Claude | Copilot | Codex | Open Code](https://img.shields.io/badge/Platforms-Claude_|_Copilot_|_Codex_|_Open_Code-purple.svg)](#2-add-it-to-your-mcp-client)
 [![Postgres: local | on-prem | azure | aws | gcp](https://img.shields.io/badge/Postgres-local_|_on--prem_|_azure_|_aws_|_gcp-336791.svg)](#requirements)
-[![Auth: password | Entra ID](https://img.shields.io/badge/Auth-password_|_Entra_ID-green.svg)](./USAGE.md#authentication)
 [![Release status: Preview](https://img.shields.io/badge/Release_status-Preview-blue.svg)](./CHANGELOG.md)
 
 **Connect your coding agent to PostgreSQL.** `postgres-mcp` lets you generate
@@ -52,41 +51,6 @@ coding agent discovers and connects to your saved profile at runtime.
     "postgres": {
       "command": "npx",
       "args": ["-y", "@microsoft/postgres-mcp", "run"]
-    }
-  }
-}
-```
-
-**VS Code** (`.vscode/mcp.json`):
-
-```jsonc
-{
-  "servers": {
-    "postgres": {
-      "command": "npx",
-      "args": ["-y", "@microsoft/postgres-mcp", "run"]
-    }
-  }
-}
-```
-
-**Codex CLI** (`~/.codex/config.toml`):
-
-```toml
-[mcp_servers.postgres]
-command = "npx"
-args = ["-y", "@microsoft/postgres-mcp", "run"]
-```
-
-**Open Code** (`opencode.json`):
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "postgres": {
-      "type": "local",
-      "command": ["npx", "-y", "@microsoft/postgres-mcp", "run"]
     }
   }
 }
