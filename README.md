@@ -1,21 +1,18 @@
-# @microsoft/postgres-mcp
+# Postgres MCP Server
 
-> **Public Preview:** Features and interfaces may change before general availability.
+[![Platforms: Claude | Copilot | Codex | Open Code](https://img.shields.io/badge/Platforms-Claude_|_Copilot_|_Codex_|_Open_Code-purple.svg)](#2-add-it-to-your-mcp-client)
+[![Postgres: local | on-prem | azure | aws | gcp](https://img.shields.io/badge/Postgres-local_|_on--prem_|_azure_|_aws_|_gcp-336791.svg)](#requirements)
+[![Auth: password | Entra ID](https://img.shields.io/badge/Auth-password_|_Entra_ID-green.svg)](./USAGE.md#authentication)
+[![Release status: Preview](https://img.shields.io/badge/Release_status-Preview-blue.svg)](./CHANGELOG.md)
 
-**PostgreSQL for AI assistants — over the Model Context Protocol (MCP).**
-
-Give your AI agent safe, structured access to PostgreSQL: query and modify
-databases, explore schema, diagnose performance, manage connections, and
-bulk‑load CSVs — from GitHub Copilot, Claude Code, Cursor, VS Code, or any
-MCP‑compatible client.
+**Connect your coding agent to PostgreSQL.** `postgres-mcp` lets you generate
+queries and run analytics, design database schemas, diagnose performance of the
+server and queries, securely manage connections, and import data. It is
+compatible with any MCP client — GitHub Copilot, Claude Code, Codex, Open Code,
+Cursor, VS Code, and more.
 
 - **npm:** https://www.npmjs.com/package/@microsoft/postgres-mcp
-- **Changelog:** [CHANGELOG.md](./CHANGELOG.md)
 - **No install required** — run it straight from `npx`.
-- **Layered safety** — `pgsql_query` is read‑only; profiles can explicitly block
-  write tools; path approval constrains local CSV reads.
-
----
 
 ## Quick start
 
@@ -45,7 +42,7 @@ npx -y @microsoft/postgres-mcp connection list
 
 The server speaks MCP over stdio. Point your client at
 `npx @microsoft/postgres-mcp run` — no credentials go in the client config; the
-assistant discovers and connects to your saved profile at runtime.
+coding agent discovers and connects to your saved profile at runtime.
 
 **GitHub Copilot CLI, Claude Code, Cursor & Claude Desktop** — clients that use the `mcpServers` format (`~/.copilot/mcp-config.json`, `mcp.json`, `.cursor/mcp.json`, `claude_desktop_config.json`, …):
 
@@ -73,12 +70,34 @@ assistant discovers and connects to your saved profile at runtime.
 }
 ```
 
+**Codex CLI** (`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.postgres]
+command = "npx"
+args = ["-y", "@microsoft/postgres-mcp", "run"]
+```
+
+**Open Code** (`opencode.json`):
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "postgres": {
+      "type": "local",
+      "command": ["npx", "-y", "@microsoft/postgres-mcp", "run"]
+    }
+  }
+}
+```
+
 > Running headless or in CI, without a keyring? The server can also take a
 > database connection string from the environment — see
 > [Connecting without a profile](./USAGE.md#connecting-without-a-profile) in the
 > guide.
 
-### 3. Ask your assistant
+### 3. Ask your coding agent
 
 > "List the tables in my PostgreSQL database."
 > "Show me the 10 most recent orders from my PostgreSQL database."
@@ -127,8 +146,13 @@ Full details in the [usage guide](./USAGE.md#security--consent).
 - **Node.js 22+** (to run via `npx`).
 - Linux x64/arm64, macOS x64/arm64, or Windows x64. Windows ARM uses x64
   emulation.
-- A reachable **PostgreSQL** database (self‑hosted, Azure Database for PostgreSQL,
-  or any wire‑compatible server).
+- A reachable **PostgreSQL** database — local, Docker, on‑premises, Azure
+  Database for PostgreSQL, Amazon RDS/Aurora, Google Cloud SQL/AlloyDB, or any
+  wire‑compatible server.
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for release notes.
 
 ## License
 
