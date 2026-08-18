@@ -76,6 +76,28 @@ The server is started by your client via `command` + `args`.
 }
 ```
 
+**Codex CLI** — `~/.codex/config.toml` (TOML, uses the `mcp_servers` table):
+
+```toml
+[mcp_servers.postgres]
+command = "npx"
+args = ["-y", "@microsoft/postgres-mcp", "run"]
+```
+
+**Open Code** — `opencode.json` (uses the `mcp` key; `command` is a single array):
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "postgres": {
+      "type": "local",
+      "command": ["npx", "-y", "@microsoft/postgres-mcp", "run"]
+    }
+  }
+}
+```
+
 ---
 
 ## Connecting to a database
