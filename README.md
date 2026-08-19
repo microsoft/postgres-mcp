@@ -1,6 +1,6 @@
 # Postgres MCP Server
 
-[![Platforms: Claude | Copilot | Codex | Open Code](https://img.shields.io/badge/Platforms-Claude_|_Copilot_|_Codex_|_Open_Code-purple.svg)](#2-add-it-to-your-mcp-client)
+[![Platforms: Claude | Copilot | Codex | Open Code](https://img.shields.io/badge/Platforms-Claude_|_Copilot_|_Codex_|_Open_Code-purple.svg)](#2-add-postgres-mcp-to-your-coding-agent)
 [![Postgres: local | on-prem | azure | aws | gcp](https://img.shields.io/badge/Postgres-local_|_on--prem_|_azure_|_aws_|_gcp-0f766e.svg)](#requirements)
 [![Release status: Preview](https://img.shields.io/badge/Release_status-Preview-blue.svg)](./CHANGELOG.md)
 
@@ -37,7 +37,7 @@ npx -y @microsoft/postgres-mcp connection list
 > explicit read-only profile **and** a read-only database role — see
 > [Read-only profiles](./USAGE.md#read-only-profiles-for-autonomous-agents).
 
-### 2. Add it to your MCP client
+### 2. Add postgres-mcp to your coding agent
 
 The server speaks MCP over stdio. Point your client at
 `npx @microsoft/postgres-mcp run` — no credentials go in the client config; the
