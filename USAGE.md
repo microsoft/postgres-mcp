@@ -255,10 +255,6 @@ tell you which actions you initiated.
    do this with `allowedMcpServers` / `deniedMcpServers` in Copilot CLI, VS Code,
    the Copilot app, and JetBrains IDEs; VS Code also exposes the equivalent as
    [device policies](https://code.visualstudio.com/docs/enterprise/ai-settings#_configure-mcp-server-access).
-   Copilot CLI additionally supports a `sandbox` key that sets minimum
-   restrictions on command execution, filesystem, network, credentials, and
-   local MCP servers. Not every MCP client offers equivalent controls; check
-   before you standardize on one.
 5. **Keep a human in the loop for writes.** Avoid blanket auto‑approval for
    `pgsql_modify` and `pgsql_bulk_load_csv`, and review the SQL in the request,
    not just the tool name. Where the client supports it, administrators can
