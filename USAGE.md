@@ -248,15 +248,22 @@ tell you which actions you initiated.
    both.
 3. **Prefer non‑production data.** Point agents at a development or anonymized
    copy whenever the task does not require live data.
-4. **Choose a client with organizational governance.** VS Code lets
-   administrators centrally allow or deny MCP servers and lock the setting on
-   managed devices — see
-   [Configure MCP server access](https://code.visualstudio.com/docs/enterprise/ai-settings#_configure-mcp-server-access).
-   Not every MCP client offers an equivalent control; check before you
-   standardize on one.
+4. **Choose a client with organizational governance.** Some clients let
+   administrators centrally allow or deny MCP servers, so `postgres-mcp` runs
+   only where your organization sanctions it. GitHub Copilot's
+   [enterprise managed settings](https://docs.github.com/en/copilot/reference/enterprise-administrators/enterprise-managed-settings)
+   do this with `allowedMcpServers` / `deniedMcpServers` in Copilot CLI, VS Code,
+   the Copilot app, and JetBrains IDEs; VS Code also exposes the equivalent as
+   [device policies](https://code.visualstudio.com/docs/enterprise/ai-settings#_configure-mcp-server-access).
+   Copilot CLI additionally supports a `sandbox` key that sets minimum
+   restrictions on command execution, filesystem, network, credentials, and
+   local MCP servers. Not every MCP client offers equivalent controls; check
+   before you standardize on one.
 5. **Keep a human in the loop for writes.** Avoid blanket auto‑approval for
    `pgsql_modify` and `pgsql_bulk_load_csv`, and review the SQL in the request,
-   not just the tool name.
+   not just the tool name. Where the client supports it, administrators can
+   disable allow‑all approval modes centrally — in Copilot clients that is
+   `permissions.disableBypassPermissionsMode`.
 6. **Vet everything else in the agent's context.** Install skills, prompts, and
    other MCP servers only from reputable sources, and confirm what they do
    first.
