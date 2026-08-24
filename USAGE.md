@@ -8,7 +8,7 @@ PostgreSQL Model Context Protocol (MCP) server.
 - [Configuring your MCP client](#configuring-your-mcp-client)
 - [Connecting to a database](#connecting-to-a-database)
 - [Authentication](#authentication)
-- [Security & consent](#security--consent)
+- [Security model](#security-model)
 - [TLS / SSL](#tls--ssl)
 - [Tools reference](#tools-reference)
 - [Common CLI commands](#common-cli-commands)
@@ -187,14 +187,92 @@ string and does not use the keyring or Entra ID authentication.
 
 ---
 
-## Security & consent
+## Security model
 
-The server supports a constrained posture for autonomous agents. Unless writes
-are intentionally delegated, configure an explicit `access_mode: ro` profile
-and a read-only database role as described in
-[Read-only profiles](#read-only-profiles-for-autonomous-agents). One additional
-fail‑closed path-approval gate protects local-file operations from prompt
-injection.
+### The server is a gateway, not a policy engine
+
+`postgres-mcp` translates MCP tool calls into PostgreSQL operations and runs
+them with the identity and permissions of the role in the connection profile you
+selected. It does **not** authorize MCP requests or tool invocations, and it
+cannot tell whether a tool call reflects your intent or something the model
+inferred, hallucinated, or was manipulated into producing. **Anything your
+database role is allowed to do, an agent talking to this server can do.**
+
+Treat the server as plumbing rather than as a security control for
+model-generated requests. The boundaries that actually hold are your
+**PostgreSQL role privileges**, your **MCP client's approval and governance
+settings**, and the **model and content** you let drive the agent.
+
+### Shared responsibility
+
+| Concern | Handled by `postgres-mcp` | Your responsibility |
+|---------|---------------------------|---------------------|
+| Whether a tool call *should* run | Nothing — requests are not authorized | Client approval prompts and organizational policy |
+| What the SQL may read or change | `pgsql_query` is read‑only and single‑statement; write tools honor `access_mode: ro` | PostgreSQL role privileges — the boundary that is actually enforced by the database |
+| Which local files may be read | Canonical‑path allowlist for the CSV tools | Keeping that allowlist minimal |
+| Credentials | OS keyring / Entra ID; secrets scrubbed from error text | Choosing least‑privilege database users and rotating credentials |
+| Trustworthiness of the model and its context | Nothing | Model selection, client selection, vetting skills and other MCP servers |
+| Attribution and audit | Pseudonymous telemetry of tool names and outcomes only | Database‑side audit logging, and a dedicated role for agent traffic |
+
+### Threats to plan for
+
+- **Prompt injection.** An agent reads untrusted content — query results, table
+  and column comments, file contents, web pages, issue text, output from other
+  MCP servers — and any of it can carry instructions. A successful injection
+  produces tool calls you never asked for, and this server executes them under
+  your role.
+- **Approval fatigue.** Most clients prompt before running a tool, but blanket
+  "always allow" and auto‑approve modes remove the last human check, and
+  repeated prompts train people to click through them.
+- **Untrusted agent extensions.** Skills, prompt packs, and additional MCP
+  servers all feed the same context window; a malicious one can steer the agent
+  toward your database.
+- **Ungoverned models.** An unreviewed or self‑hosted model may be poorly
+  aligned or deliberately tampered with.
+
+The realistic consequences are unauthorized data access and exfiltration (rows
+pulled into the model's context can leave your environment), unauthorized
+modification of data or schema, destructive administrative actions, and loss of
+attribution — PostgreSQL sees your role, not "the agent", so logs alone cannot
+tell you which actions you initiated.
+
+### Hardening checklist
+
+1. **Connect as a least‑privilege role.** Create a dedicated database role for
+   agent traffic and grant it only the schemas and tables it needs. Do not point
+   the agent at a superuser or table‑owner role for exploratory work.
+2. **Default to read‑only.** Set `access_mode: ro` on the profile *and* give the
+   database role read‑only permissions — see
+   [Read-only profiles](#read-only-profiles-for-autonomous-agents). The profile
+   flag is a gate inside this server; the role is enforced by PostgreSQL. Use
+   both.
+3. **Prefer non‑production data.** Point agents at a development or anonymized
+   copy whenever the task does not require live data.
+4. **Choose a client with organizational governance.** Some clients let
+   administrators centrally allow or deny MCP servers, so `postgres-mcp` runs
+   only where your organization sanctions it. GitHub Copilot's
+   [enterprise managed settings](https://docs.github.com/en/copilot/reference/enterprise-administrators/enterprise-managed-settings)
+   do this with `allowedMcpServers` / `deniedMcpServers` in Copilot CLI, VS Code,
+   the Copilot app, and JetBrains IDEs; VS Code also exposes the equivalent as
+   [device policies](https://code.visualstudio.com/docs/enterprise/ai-settings#_configure-mcp-server-access).
+5. **Keep a human in the loop for writes.** Avoid blanket auto‑approval for
+   `pgsql_modify` and `pgsql_bulk_load_csv`, and review the SQL in the request,
+   not just the tool name. Where the client supports it, administrators can
+   disable allow‑all approval modes centrally — in Copilot clients that is
+   `permissions.disableBypassPermissionsMode`.
+6. **Vet everything else in the agent's context.** Install skills, prompts, and
+   other MCP servers only from reputable sources, and confirm what they do
+   first.
+7. **Use models from trusted, governed sources**, and assume the model and
+   client may still be exposed to prompt injection or manipulated content.
+8. **Keep the CSV allowlist tight.** Approve specific directories, and set
+   `PGSQL_MCP_DISABLE_CWD_ACCESS=1` when the startup working directory should
+   not be readable.
+9. **Audit on the database side.** Enable `log_statement` or `pgaudit`, and use
+   a distinct role for agent connections so agent activity is separable from
+   yours.
+10. **Bound the blast radius.** Set statement and idle timeouts, cap connections
+    per role, and keep restorable backups.
 
 ### Local file reads — `allow-access-to-path`
 

@@ -89,6 +89,13 @@ See the [usage guide](./USAGE.md) for tools, configuration, authentication
 
 ## Security in one minute
 
+- **The server is a gateway, not a policy engine.** It does not authorize MCP
+  requests — every tool call runs with the permissions of the database role you
+  connected with, whether or not you intended it. A prompt‑injected or
+  misaligned agent can do anything that role can do, so the real boundaries are
+  your PostgreSQL privileges, your MCP client's approval controls, and the model
+  you run. See [Security model](./USAGE.md#security-model) for the shared
+  responsibility split and a hardening checklist.
 - **`pgsql_query` is read‑only.** Omitted profile `access_mode` permits write
   tools; set `access_mode: ro` and use a read-only database role unless writes
   are intentionally delegated.
@@ -101,7 +108,7 @@ See the [usage guide](./USAGE.md) for tools, configuration, authentication
   allows recursive access.
 - **Secrets are scrubbed** from error messages before they leave the process.
 
-Full details in the [usage guide](./USAGE.md#security--consent).
+Full details in the [usage guide](./USAGE.md#security-model).
 
 ---
 
