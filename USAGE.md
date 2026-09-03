@@ -110,9 +110,9 @@ and nothing sensitive goes in the client config.
 Create named profiles stored in `~/.postgres-mcp/connections.yaml`, with passwords
 in your **OS keyring** (never written to disk in plaintext):
 
-Your assistant can manage profiles with `pgsql_add_connection`,
-`pgsql_list_connection_profiles`, `pgsql_remove_connection`, and
-`pgsql_connect`. Passwords are set separately with the CLI so they are stored in
+Your assistant can manage profiles with `postgres_mcp_add_connection`,
+`postgres_mcp_list_connection_profiles`, `postgres_mcp_remove_connection`, and
+`postgres_mcp_connect`. Passwords are set separately with the CLI so they are stored in
 the keyring:
 
 ```sh
@@ -132,15 +132,15 @@ npx -y @microsoft/postgres-mcp connection remove prod
 
 Use two independent controls:
 
-- Add the profile with `pgsql_add_connection` and set `access_mode` to `ro`.
+- Add the profile with `postgres_mcp_add_connection` and set `access_mode` to `ro`.
   This blocks write tools for that connection.
 - Give the database user read-only permissions at the database/server level.
 
 ### Connecting without a profile
 
-For headless / CI environments (no OS keyring), set `PGSQL_MCP_CONNECTION_STRING`
+For headless / CI environments (no OS keyring), set `POSTGRES_MCP_CONNECTION_STRING`
 to a libpq URI or key=value string. It creates an implicit profile named by
-`PGSQL_MCP_PROFILE_NAME` (default `default`). Use a name that is different from
+`POSTGRES_MCP_PROFILE_NAME` (default `default`). Use a name that is different from
 all saved profiles.
 
 ```
@@ -163,7 +163,7 @@ machines and reserve this for containers / CI where a keyring isn't available.
 the service name `postgres-mcp`. The password is read at connect time and never
 persisted to the YAML config.
 
-Non‑interactive/CI: set `PGSQL_MCP_PASSWORD` and run `set-password` without a
+Non‑interactive/CI: set `POSTGRES_MCP_PASSWORD` and run `set-password` without a
 prompt. Avoid the `--password` flag (it appears in `ps` and shell history — the
 server prints a warning if you use it).
 
@@ -182,7 +182,7 @@ Entra ID.
 
 ### Connection string
 
-The `PGSQL_MCP_CONNECTION_STRING` profile uses the credentials embedded in the
+The `POSTGRES_MCP_CONNECTION_STRING` profile uses the credentials embedded in the
 string and does not use the keyring or Entra ID authentication.
 
 ---
@@ -208,7 +208,7 @@ settings**, and the **model and content** you let drive the agent.
 | Concern | Handled by `postgres-mcp` | Your responsibility |
 |---------|---------------------------|---------------------|
 | Whether a tool call *should* run | Nothing — requests are not authorized | Client approval prompts and organizational policy |
-| What the SQL may read or change | `pgsql_query` is read‑only and single‑statement; write tools honor `access_mode: ro` | PostgreSQL role privileges — the boundary that is actually enforced by the database |
+| What the SQL may read or change | `postgres_mcp_query` is read‑only and single‑statement; write tools honor `access_mode: ro` | PostgreSQL role privileges — the boundary that is actually enforced by the database |
 | Which local files may be read | Canonical‑path allowlist for the CSV tools | Keeping that allowlist minimal |
 | Credentials | OS keyring / Entra ID; secrets scrubbed from error text | Choosing least‑privilege database users and rotating credentials |
 | Trustworthiness of the model and its context | Nothing | Model selection, client selection, vetting skills and other MCP servers |
@@ -256,7 +256,7 @@ tell you which actions you initiated.
    the Copilot app, and JetBrains IDEs; VS Code also exposes the equivalent as
    [device policies](https://code.visualstudio.com/docs/enterprise/ai-settings#_configure-mcp-server-access).
 5. **Keep a human in the loop for writes.** Avoid blanket auto‑approval for
-   `pgsql_modify` and `pgsql_bulk_load_csv`, and review the SQL in the request,
+   `postgres_mcp_modify` and `postgres_mcp_bulk_load_csv`, and review the SQL in the request,
    not just the tool name. Where the client supports it, administrators can
    disable allow‑all approval modes centrally — in Copilot clients that is
    `permissions.disableBypassPermissionsMode`.
@@ -266,7 +266,7 @@ tell you which actions you initiated.
 7. **Use models from trusted, governed sources**, and assume the model and
    client may still be exposed to prompt injection or manipulated content.
 8. **Keep the CSV allowlist tight.** Approve specific directories, and set
-   `PGSQL_MCP_DISABLE_CWD_ACCESS=1` when the startup working directory should
+   `POSTGRES_MCP_DISABLE_CWD_ACCESS=1` when the startup working directory should
    not be readable.
 9. **Audit on the database side.** Enable `log_statement` or `pgaudit`, and use
    a distinct role for agent connections so agent activity is separable from
@@ -276,8 +276,8 @@ tell you which actions you initiated.
 
 ### Local file reads — `allow-access-to-path`
 
-`pgsql_bulk_load_csv` streams a file's contents into a table you can then read
-back, and `pgsql_describe_csv` reveals a file's column names and structure — so
+`postgres_mcp_bulk_load_csv` streams a file's contents into a table you can then read
+back, and `postgres_mcp_describe_csv` reveals a file's column names and structure — so
 an unrestricted path is effectively an arbitrary local‑file read. The server only
 reads CSVs whose **canonical path** (symlinks and `..` resolved) is an approved
 file or is under an approved directory:
@@ -289,20 +289,20 @@ npx -y @microsoft/postgres-mcp allow-access-to-path /data/imports
 - The **MCP server's startup working directory is approved by default** (unless
   it is your home directory or the filesystem root). This is the directory from
   which the MCP client starts the server, and is not necessarily the agent's
-  workspace. Disable that default with `PGSQL_MCP_DISABLE_CWD_ACCESS=1`.
+  workspace. Disable that default with `POSTGRES_MCP_DISABLE_CWD_ACCESS=1`.
 - Approvals persist in `~/.postgres-mcp/approved_paths.yaml`. Headless/CI:
-  `PGSQL_MCP_ALLOWED_PATHS` (platform path list).
+  `POSTGRES_MCP_ALLOWED_PATHS` (platform path list).
 
 ### Other protections
 
-- **Read‑only queries.** `pgsql_query` rejects multi‑statement input and is
-  read‑only; writes must go through `pgsql_modify`, which honors a read‑only
+- **Read‑only queries.** `postgres_mcp_query` rejects multi‑statement input and is
+  read‑only; writes must go through `postgres_mcp_modify`, which honors a read‑only
   connection flag.
 - **Secret redaction.** Connection URIs, passwords, bearer tokens, JWTs, and
   Azure connection strings are stripped from tool **error** text before it
   leaves the process (paths and hostnames are kept so errors stay actionable).
 - **Frame cap.** A single inbound JSON‑RPC message is capped (default 32 MiB,
-  see `PGSQL_MCP_MAX_FRAME_BYTES`) to bound memory against a hostile client.
+  see `POSTGRES_MCP_MAX_FRAME_BYTES`) to bound memory against a hostile client.
 
 > **Scope note:** this gate protects the MCP tool surface. An agent host that
 > also gives the model a raw shell can bypass it — grant shell access
@@ -325,12 +325,12 @@ Set `sslmode` in the connection string or profile:
 
 **Trusted CAs.** On a verifying connection the trust store is the bundled Mozilla
 roots, **plus** your host OS trust store, **plus** any PEM files listed in
-`PGSQL_MCP_EXTRA_CA_CERTS` — so a private/corporate CA works with `verify-full`
+`POSTGRES_MCP_EXTRA_CA_CERTS` — so a private/corporate CA works with `verify-full`
 without rebuilding. For **AAD** connections the OS store is deliberately
-excluded (only bundled roots + `PGSQL_MCP_EXTRA_CA_CERTS`), so a machine‑trusted
+excluded (only bundled roots + `POSTGRES_MCP_EXTRA_CA_CERTS`), so a machine‑trusted
 MITM CA cannot impersonate the Azure host and capture your token.
 
-`PGSQL_MCP_EXTRA_CA_CERTS` is a platform path list: `:`‑separated on
+`POSTGRES_MCP_EXTRA_CA_CERTS` is a platform path list: `:`‑separated on
 macOS/Linux, `;`‑separated on Windows.
 
 ---
@@ -339,21 +339,21 @@ macOS/Linux, `;`‑separated on Windows.
 
 | Tool | Purpose |
 |------|---------|
-| `pgsql_list_connection_profiles` | List saved profiles (+ the env profile, if any). |
-| `pgsql_add_connection` | Add a profile. |
-| `pgsql_remove_connection` | Remove a profile; keyring cleanup is best-effort. |
-| `pgsql_connect` | Open a pooled connection (by profile id). |
-| `pgsql_disconnect` | Close a connection. |
-| `pgsql_list_databases` | List databases on the server. |
-| `pgsql_db_context` | Fetch `CREATE` scripts (tables, indexes, functions, sequences, …). |
-| `pgsql_query` | Run a **read‑only** SQL query. |
-| `pgsql_modify` | Run DDL / DML (`CREATE` / `ALTER` / `INSERT` / `UPDATE` / …). |
-| `pgsql_describe_csv` | Describe a CSV file's structure (YAML). |
-| `pgsql_bulk_load_csv` | Bulk‑load a CSV into a table via `COPY`. |
-| `pgsql_get_server_capabilities` | Probe available diagnostic capabilities. |
-| `pgsql_get_metrics_group` | Collect a group of performance/diagnostic metrics. |
+| `postgres_mcp_list_connection_profiles` | List saved profiles (+ the env profile, if any). |
+| `postgres_mcp_add_connection` | Add a profile. |
+| `postgres_mcp_remove_connection` | Remove a profile; keyring cleanup is best-effort. |
+| `postgres_mcp_connect` | Open a pooled connection (by profile id). |
+| `postgres_mcp_disconnect` | Close a connection. |
+| `postgres_mcp_list_databases` | List databases on the server. |
+| `postgres_mcp_db_context` | Fetch `CREATE` scripts (tables, indexes, functions, sequences, …). |
+| `postgres_mcp_query` | Run a **read‑only** SQL query. |
+| `postgres_mcp_modify` | Run DDL / DML (`CREATE` / `ALTER` / `INSERT` / `UPDATE` / …). |
+| `postgres_mcp_describe_csv` | Describe a CSV file's structure (YAML). |
+| `postgres_mcp_bulk_load_csv` | Bulk‑load a CSV into a table via `COPY`. |
+| `postgres_mcp_get_server_capabilities` | Probe available diagnostic capabilities. |
+| `postgres_mcp_get_metrics_group` | Collect a group of performance/diagnostic metrics. |
 
-> **Note:** `pgsql_add_connection` never accepts a password — set passwords out
+> **Note:** `postgres_mcp_add_connection` never accepts a password — set passwords out
 > of band with the `connection set-password` CLI so they land in the OS keyring.
 
 ---
@@ -380,20 +380,20 @@ npx -y @microsoft/postgres-mcp <command>
 
 ## Environment variables
 
-All server configuration uses the `PGSQL_MCP_` prefix.
+All server configuration uses the `POSTGRES_MCP_` prefix.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| `PGSQL_MCP_CONNECTION_STRING` | libpq URI or key=value string for an environment profile. | *(unset)* |
-| `PGSQL_MCP_PROFILE_NAME` | Name of the environment profile. | `default` |
-| `PGSQL_MCP_PASSWORD` | Password for `connection set-password` in non‑interactive/CI (skips the hidden prompt). | *(unset)* |
-| `PGSQL_MCP_QUERY_TIMEOUT_MS` | Query execution timeout in milliseconds. Unset uses the default; zero, negative, or invalid values disable it. | `540000` (9 min) |
-| `PGSQL_MCP_ALLOWED_PATHS` | Platform path list of files or directories approved for CSV access (`:` on Unix, `;` on Windows). | *(unset)* |
-| `PGSQL_MCP_DISABLE_CWD_ACCESS` | Set to a non‑empty value to remove the MCP server's startup working directory from the default CSV-access paths. | *(unset)* |
-| `PGSQL_MCP_EXTRA_CA_CERTS` | Platform path list (`:` unix / `;` windows) of PEM files with extra CA certificates to trust on verified TLS. | *(unset)* |
-| `PGSQL_MCP_MAX_FRAME_BYTES` | Max size (bytes) of one inbound JSON‑RPC frame. Invalid/non‑positive keeps the default. | `33554432` (32 MiB) |
-| `PGSQL_MCP_DISABLE_KEYRING` | Makes `connection set-password` fail fast with a "use a connection string instead" message on hosts without an OS keyring (headless/CI), rather than attempting a store. Only affects that CLI command — the server connects fine without a keyring. | *(unset)* |
-| `PGSQL_MCP_LOG` | Increase log verbosity for troubleshooting (e.g. `debug`). Overrides `--log-level`. | `info` (run) |
+| `POSTGRES_MCP_CONNECTION_STRING` | libpq URI or key=value string for an environment profile. | *(unset)* |
+| `POSTGRES_MCP_PROFILE_NAME` | Name of the environment profile. | `default` |
+| `POSTGRES_MCP_PASSWORD` | Password for `connection set-password` in non‑interactive/CI (skips the hidden prompt). | *(unset)* |
+| `POSTGRES_MCP_QUERY_TIMEOUT_MS` | Query execution timeout in milliseconds. Unset uses the default; zero, negative, or invalid values disable it. | `540000` (9 min) |
+| `POSTGRES_MCP_ALLOWED_PATHS` | Platform path list of files or directories approved for CSV access (`:` on Unix, `;` on Windows). | *(unset)* |
+| `POSTGRES_MCP_DISABLE_CWD_ACCESS` | Set to a non‑empty value to remove the MCP server's startup working directory from the default CSV-access paths. | *(unset)* |
+| `POSTGRES_MCP_EXTRA_CA_CERTS` | Platform path list (`:` unix / `;` windows) of PEM files with extra CA certificates to trust on verified TLS. | *(unset)* |
+| `POSTGRES_MCP_MAX_FRAME_BYTES` | Max size (bytes) of one inbound JSON‑RPC frame. Invalid/non‑positive keeps the default. | `33554432` (32 MiB) |
+| `POSTGRES_MCP_DISABLE_KEYRING` | Makes `connection set-password` fail fast with a "use a connection string instead" message on hosts without an OS keyring (headless/CI), rather than attempting a store. Only affects that CLI command — the server connects fine without a keyring. | *(unset)* |
+| `POSTGRES_MCP_LOG` | Increase log verbosity for troubleshooting (e.g. `debug`). Overrides `--log-level`. | `info` (run) |
 
 **External (Entra ID):** `DefaultAzureCredential` reads the standard Azure SDK
 variables — `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_SECRET`, etc. —
@@ -423,15 +423,15 @@ credentials). Disable it with `run --no-telemetry`.
 
 ## Troubleshooting
 
-- **"Profile with ID '' not found"** — the `profileId` passed to `pgsql_connect`
-  was empty; list profiles first (`pgsql_list_connection_profiles`) and use the
+- **"Profile with ID '' not found"** — the `profileId` passed to `postgres_mcp_connect`
+  was empty; list profiles first (`postgres_mcp_list_connection_profiles`) and use the
   returned id.
 - **"Refusing to read '…' … outside the approved bulk-load paths"** — approve
   the file or its parent directory with `allow-access-to-path <path>` (or set
-  `PGSQL_MCP_ALLOWED_PATHS`).
+  `POSTGRES_MCP_ALLOWED_PATHS`).
 - **"OS keyring backend unavailable"** (headless/Docker) — provide credentials
-  via `PGSQL_MCP_CONNECTION_STRING`; no keyring is needed to connect.
+  via `POSTGRES_MCP_CONNECTION_STRING`; no keyring is needed to connect.
 - **`verify-full` fails against a corporate CA** — point
-  `PGSQL_MCP_EXTRA_CA_CERTS` at the CA's PEM file, or add it to your OS trust
+  `POSTGRES_MCP_EXTRA_CA_CERTS` at the CA's PEM file, or add it to your OS trust
   store (non‑AAD connections trust the OS store automatically).
-- **See more logs** — set `PGSQL_MCP_LOG=debug` (logs go to stderr).
+- **See more logs** — set `POSTGRES_MCP_LOG=debug` (logs go to stderr).

@@ -67,8 +67,8 @@ coding agent discovers and connects to your saved profile at runtime.
 > "Show me the 10 most recent orders from my PostgreSQL database."
 > "What's slowing down my PostgreSQL server right now?"
 
-The agent calls the server's tools (`pgsql_connect`, `pgsql_query`,
-`pgsql_db_context`, …) for you.
+The agent calls the server's tools (`postgres_mcp_connect`,
+`postgres_mcp_query`, `postgres_mcp_db_context`, …) for you.
 
 ---
 
@@ -77,7 +77,7 @@ The agent calls the server's tools (`pgsql_connect`, `pgsql_query`,
 | Area | Tools |
 |------|-------|
 | **Connections** | list / add / remove profiles, connect, disconnect, list databases |
-| **Query** | read‑only SQL (`pgsql_query`), DDL/DML (`pgsql_modify`) |
+| **Query** | read‑only SQL (`postgres_mcp_query`), DDL/DML (`postgres_mcp_modify`) |
 | **Schema** | fetch `CREATE` scripts for tables, indexes, functions, sequences… |
 | **Data** | describe a CSV, bulk‑load a CSV via `COPY` |
 | **Diagnostics** | probe server capabilities, collect performance metric groups |
@@ -98,13 +98,13 @@ See the [usage guide](./USAGE.md) for tools, configuration, authentication
   client, and the model you choose to run. See
   [Security model](./USAGE.md#security-model) for who's responsible for what,
   plus a checklist for locking things down.
-- **`pgsql_query` is read‑only.** Omitted profile `access_mode` permits write
+- **`postgres_mcp_query` is read‑only.** Omitted profile `access_mode` permits write
   tools; set `access_mode: ro` and use a read-only database role unless writes
   are intentionally delegated.
 - **Microsoft Entra ID (AAD)** is selected automatically for Azure profiles
   without a stored keyring password. Store a profile password to use password
   authentication instead.
-- **Local file reads** (`pgsql_bulk_load_csv`, `pgsql_describe_csv`) are limited
+- **Local file reads** (`postgres_mcp_bulk_load_csv`, `postgres_mcp_describe_csv`) are limited
   to the MCP server's startup working directory by default and paths allowed
   with `allow-access-to-path <path>`. A file allows only itself; a directory
   allows recursive access.
