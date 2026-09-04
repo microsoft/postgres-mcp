@@ -132,7 +132,7 @@ npx -y @microsoft/postgres-mcp connection remove prod
 
 Use two independent controls:
 
-- Add the profile with `postgres_mcp_add_connection` and set `access_mode` to `ro`.
+- Add the profile with `postgres_mcp_add_connection` and set `accessMode` to `ro`.
   This blocks write tools for that connection.
 - Give the database user read-only permissions at the database/server level.
 
@@ -171,14 +171,62 @@ server prints a warning if you use it).
 
 If a saved profile's host looks like an Azure PostgreSQL host
 (`*.postgres.database.azure.com`) and no keyring password is stored, the server
-authenticates with an Entra ID token via **`DefaultAzureCredential`**. That
-credential chain automatically picks up, in order: environment credentials
-(`AZURE_CLIENT_ID` / `AZURE_TENANT_ID` / `AZURE_CLIENT_SECRET`), managed
-identity, and the Azure CLI (`az login`).
+authenticates with an Entra ID token. Credential sources are tried in order:
+
+1. **Workload identity** — `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` and
+   `AZURE_FEDERATED_TOKEN_FILE` (AKS and other federated setups).
+2. **Service principal** — `AZURE_TENANT_ID`, `AZURE_CLIENT_ID` and
+   `AZURE_CLIENT_SECRET`.
+3. **Managed identity** — only when `POSTGRES_MCP_MANAGED_IDENTITY=1`; see
+   below.
+4. **Developer tools** — `az login`, then `azd auth login`.
+
+`AZURE_CLIENT_SECRET` is what tells a service principal apart from a managed
+identity: with a secret, `AZURE_CLIENT_ID` names a service principal; without
+one it names a user‑assigned managed identity. A secret set without a tenant is
+reported as an error rather than silently skipped.
+
+> **Azure CLI 2.54.0 or newer** is required for `az login` to work as a
+> credential source.
 
 To use password authentication instead, store a keyring password with
 `connection set-password <name>`; a stored password takes precedence over
 Entra ID.
+
+#### Managed identity is opt-in
+
+```sh
+# system-assigned
+POSTGRES_MCP_MANAGED_IDENTITY=1 npx -y @microsoft/postgres-mcp run
+
+# user-assigned — AZURE_CLIENT_ID names the identity
+POSTGRES_MCP_MANAGED_IDENTITY=1 AZURE_CLIENT_ID=<client-id> \
+  npx -y @microsoft/postgres-mcp run
+```
+
+#### Selecting a tenant, or signing in as a group
+
+Two optional profile settings, both ignored for non‑Entra connections:
+
+| Purpose | Tool argument | CLI flag |
+|---------|---------------|----------|
+| Tenant to mint the token in — a tenant GUID or a verified domain. Use it to reach a server in a tenant you are a guest of. | `tenantId` | `--tenant-id` |
+| PostgreSQL role to sign in as, when it differs from the identity in the token. | `loginAsUser` | `--login-as-user` |
+
+```sh
+npx -y @microsoft/postgres-mcp connection add prod \
+  "host=myserver.postgres.database.azure.com user=app dbname=appdb sslmode=require" \
+  --tenant-id contoso.onmicrosoft.com \
+  --login-as-user "Contoso DB Admins"
+```
+
+`loginAsUser` is what makes **group login** work: on an Entra‑enabled server the
+security group is the PostgreSQL role, but a token only ever carries the
+*member's* identity — so the role has to be named explicitly. Use the group's
+**display name** (`Contoso DB Admins`), not its email address.
+
+Pinning a tenant turns off the managed‑identity source, which can only issue
+tokens in its own home tenant.
 
 ### Connection string
 
@@ -368,7 +416,7 @@ npx -y @microsoft/postgres-mcp <command>
 |---------|-------------|
 | `run [--log-level L] [--no-telemetry]` | Start the MCP server over stdio. |
 | `connection list` | List profiles, their hosts, and whether a password is set. |
-| `connection add <name> "<connection-string>"` | Add a profile from a URI or key=value string. Names allow `a‑z A‑Z 0‑9 _ -`. |
+| `connection add <name> "<connection-string>"` | Add a profile from a URI or key=value string. Names allow `a‑z A‑Z 0‑9 _ -`. Optional `--access-mode MODE`, and for Entra ID `--tenant-id TENANT` / `--login-as-user NAME`. |
 | `connection set-password <name> [--password X]` | Store a password in the OS keyring (hidden prompt by default). |
 | `connection remove <name> [-f]` | Remove a profile; keyring cleanup is best-effort. |
 | `allow-access-to-path <path>` | Allow CSV access to an existing file or directory. |
@@ -394,10 +442,13 @@ All server configuration uses the `POSTGRES_MCP_` prefix.
 | `POSTGRES_MCP_MAX_FRAME_BYTES` | Max size (bytes) of one inbound JSON‑RPC frame. Invalid/non‑positive keeps the default. | `33554432` (32 MiB) |
 | `POSTGRES_MCP_DISABLE_KEYRING` | Makes `connection set-password` fail fast with a "use a connection string instead" message on hosts without an OS keyring (headless/CI), rather than attempting a store. Only affects that CLI command — the server connects fine without a keyring. | *(unset)* |
 | `POSTGRES_MCP_LOG` | Increase log verbosity for troubleshooting (e.g. `debug`). Overrides `--log-level`. | `info` (run) |
+| `POSTGRES_MCP_MANAGED_IDENTITY` | Set to `1` (or `true`/`yes`/`on`) to allow a managed identity as an Entra ID credential source. Off by default — see [Managed identity is opt-in](#managed-identity-is-opt-in). | *(unset)* |
 
-**External (Entra ID):** `DefaultAzureCredential` reads the standard Azure SDK
-variables — `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_CLIENT_SECRET`, etc. —
-and falls back to managed identity / `az login` when they are absent.
+**External (Entra ID):** the credential chain reads the standard Azure SDK
+variables — `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`,
+`AZURE_FEDERATED_TOKEN_FILE` — and falls back to `az login` / `azd auth login`
+when they are absent. Managed identity is tried only when
+`POSTGRES_MCP_MANAGED_IDENTITY=1`.
 
 ---
 
