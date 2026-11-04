@@ -129,4 +129,4 @@ See [CHANGELOG.md](./CHANGELOG.md) for release notes.
 
 ## License
 
-Licensed under the [MIT License](https://github.com/microsoft/postgres-mcp/blob/main/LICENSE) © Microsoft.
+This repository is a getting started information package. It is licensed under the [MIT License](https://github.com/microsoft/postgres-mcp/blob/main/LICENSE) © Microsoft. The postgres-mcp project itself is proprietary and its source code is not avialable under MIT license.
